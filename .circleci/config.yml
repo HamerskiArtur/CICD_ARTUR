@@ -44,18 +44,18 @@ jobs:
       - run:
           command: |
             echo "$DOCKERHUB_PASS" | docker login -u "izargot" --password-stdin
-            sudo docker build ./db -t arturekcicd/node-react-db
-            sudo docker push arturekcicd/node-react-db:latest
+            sudo docker build ./db -t izargot/arturekcicd/node-react-db
+            sudo docker push izargot/arturekcicd/node-react-db:latest
       - run:
           command: |
             echo "$DOCKERHUB_PASS" | docker login -u "izargot" --password-stdin
-            sudo docker build ./server -t arturekcicd/serwer
-            sudo docker push arturekcicd/serwer
+            sudo docker build ./server -t izargot/arturekcicd/serwer
+            sudo docker push izargot/arturekcicd/serwer
       - run:
           command: |
             echo "$DOCKERHUB_PASS" | docker login -u "izargot" --password-stdin
-            sudo docker build ./client -t arturekcicd/klient
-            sudo docker push arturekcicd/klient
+            sudo docker build ./client -t izargot/arturekcicd/klient
+            sudo docker push izargot/arturekcicd/klient
             
 workflows:
     build-and-test:
