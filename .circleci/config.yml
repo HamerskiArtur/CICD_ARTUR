@@ -1,32 +1,85 @@
 version: 2.1
 orbs:
-    node: circleci/node@2.1.0
-    
+  node: circleci/node@2.1.0
 jobs:
-    build-and-test:
-        executor: node/default
-        steps:
-        - checkout
-        - node/install-packages
-        - run:
-            command: npm test
-    deploy:
-        executor: node/default
-        steps:
-            - checkout
-           
+  build-and-test:
+  build:  
+    executor:
+      name: node/default
+    steps:
+      - checkout
+      - setup_remote_docker
+      
+      
+  acceptance_test_1:
+    executor:
+      name: node/default
+    steps:
+      - checkout
+      - node/install-packages:
+          app-dir: ./server
+      - run:
+          command: npm install
+          working_directory: ./server
+      - run:
+          command: npm test
+          working_directory: ./server
+  
+  acceptance_test_2:
+    executor:
+      name: node/default
+    steps:
+      - checkout
+      - run:
+          command: npm install
+          working_directory: ./client
+      - run:
+          command: npm test
+          working_directory: ./client
+   
+  docker-mk:
+    machine: true
+    steps:
+      - checkout          
+      - run:
+          command: |
+            echo "$DOCKERHUB_PASS" | docker login -u "izargot" --password-stdin
+            sudo docker build ./db -t izargot/node-react-db
+            sudo docker push izargot/node-react-db:latest
+      - run:
+          command: |
+            echo "$DOCKERHUB_PASS" | docker login -u "izargot" --password-stdin
+            sudo docker build ./server -t izargot/serwer
+            sudo docker push izargot/serwer
+      - run:
+          command: |
+            echo "$DOCKERHUB_PASS" | docker login -u "izargot" --password-stdin
+            sudo docker build ./client -t izargot/klient
+            sudo docker push izargot/klient
+            
 workflows:
-    build-test-and-deploy:
-        jobs:
-        - build-and-test:
+    build-and-test:
+      jobs:
+        - build:
+          filters:
+            branches:
+              only:
+                - master
+        - acceptance_test_1:
             filters:
-                branches:
-                    ignore:
-                    - dev
-        - deploy:
+              branches:
+                only:
+                 - master
             requires:
-            - build-and-test
+                - build
+        - acceptance_test_2:
             filters:
-                branches:
-                    only:
-                    - master
+              branches:
+                only:
+                 - master
+            requires:
+                - build
+        - docker-mk:
+            requires:
+              - acceptance_test_1
+              - acceptance_test_2
